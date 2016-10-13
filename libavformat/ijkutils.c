@@ -64,3 +64,5 @@ IJK_DUMMY_PROTOCOL(ijkhttphook);
 IJK_DUMMY_PROTOCOL(ijklongurl);
 IJK_DUMMY_PROTOCOL(ijksegment);
 IJK_DUMMY_PROTOCOL(ijktcphook);
+IJK_DUMMY_PROTOCOL(fileijk);
+IJK_DUMMY_PROTOCOL(ijkfileurlsegment);

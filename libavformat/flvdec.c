@@ -407,10 +407,10 @@ static int parse_keyframes_index(AVFormatContext *s, AVIOContext *ioc, int64_t m
 
     if (timeslen == fileposlen && fileposlen>1 && max_pos <= filepositions[0]) {
         for (i = 0; i < FFMIN(2,fileposlen); i++) {
-            flv->validate_index[i].pos = filepositions[i];
-            flv->validate_index[i].dts = times[i] * 1000;
-            flv->validate_count        = i + 1;
-        }
+                flv->validate_index[i].pos = filepositions[i];
+                flv->validate_index[i].dts = times[i] * 1000;
+                flv->validate_count        = i + 1;
+            }
         flv->keyframe_times = times;
         flv->keyframe_filepositions = filepositions;
         flv->keyframe_count = timeslen;
@@ -465,7 +465,6 @@ static int amf_parse_object(AVFormatContext *s, AVStream *astream,
                 av_log(s, AV_LOG_ERROR, "Keyframe index parsing failed\n");
             else
                 add_keyframes_index(s);
-
         while (avio_tell(ioc) < max_pos - 2 &&
                amf_get_string(ioc, str_val, sizeof(str_val)) > 0)
             if (amf_parse_object(s, astream, vstream, str_val, max_pos,
@@ -1164,6 +1163,7 @@ retry_duration:
     pkt->dts          = dts;
     pkt->pts          = pts == AV_NOPTS_VALUE ? dts : pts;
     pkt->stream_index = st->index;
+    pkt->pos          = pos;
     if (flv->new_extradata[stream_type]) {
         uint8_t *side = av_packet_new_side_data(pkt, AV_PKT_DATA_NEW_EXTRADATA,
                                                 flv->new_extradata_size[stream_type]);

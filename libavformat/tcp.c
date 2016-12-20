@@ -47,7 +47,6 @@ typedef struct TCPContext {
     int send_buffer_size;
     int64_t app_ctx_intptr;
 
-    int ipv6_port_workaround;
     int addrinfo_one_by_one;
     int addrinfo_timeout;
 
@@ -65,7 +64,6 @@ static const AVOption options[] = {
     { "recv_buffer_size", "Socket receive buffer size (in bytes)",             OFFSET(recv_buffer_size), AV_OPT_TYPE_INT, { .i64 = -1 },         -1, INT_MAX, .flags = D|E },
     { "ijkapplication",   "AVApplicationContext",                              OFFSET(app_ctx_intptr),   AV_OPT_TYPE_INT64, { .i64 = 0 }, INT64_MIN, INT64_MAX, .flags = D },
 
-    { "ipv6_port_workaround",  "reset port in parsing addrinfo under ipv6",    OFFSET(ipv6_port_workaround), AV_OPT_TYPE_INT, { .i64 = 0 },         0, 1, .flags = D|E },
     { "addrinfo_one_by_one",  "parse addrinfo one by one in getaddrinfo()",    OFFSET(addrinfo_one_by_one), AV_OPT_TYPE_INT, { .i64 = 0 },         0, 1, .flags = D|E },
     { "addrinfo_timeout", "set timeout (in microseconds) for getaddrinfo()",   OFFSET(addrinfo_timeout), AV_OPT_TYPE_INT, { .i64 = -1 },       -1, INT_MAX, .flags = D|E },
     { NULL }
@@ -395,10 +393,16 @@ static int tcp_open(URLContext *h, const char *uri, int flags)
     cur_ai = ai;
 
  restart:
-    if (s->ipv6_port_workaround && cur_ai->ai_family == AF_INET6 && port != 0) {
-        struct sockaddr_in6* in6 = (struct sockaddr_in6*)cur_ai->ai_addr;
-        in6->sin6_port = htons(port);
+#if HAVE_STRUCT_SOCKADDR_IN6
+    // workaround for IOS9 getaddrinfo in IPv6 only network use hardcode IPv4 address can not resolve port number.
+    if (cur_ai->ai_family == AF_INET6){
+        struct sockaddr_in6 * sockaddr_v6 = (struct sockaddr_in6 *)cur_ai->ai_addr;
+        if (!sockaddr_v6->sin6_port){
+            sockaddr_v6->sin6_port = htons(port);
+        }
     }
+#endif
+
     fd = ff_socket(cur_ai->ai_family,
                    cur_ai->ai_socktype,
                    cur_ai->ai_protocol);
